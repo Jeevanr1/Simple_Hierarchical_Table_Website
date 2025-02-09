@@ -1,5 +1,5 @@
 # Simple_Hierarchical_Table_Website
-Created with CodeSandbox
+
 website Link: https://hierarchicaltabledashboard.netlify.app/
 
 

@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, {useState} from "react";
+import RowComponent from "./RowComponent";
 import "./styles.css";
 
 const initialRowData = [
@@ -6,16 +7,16 @@ const initialRowData = [
     id: "electronics",
     label: "Electronics",
     children: [
-      { id: "phones", label: "Phones", value: 800 },
-      { id: "laptops", label: "Laptops", value: 700 },
+      {id: "phones", label: "Phones", value: 800},
+      {id: "laptops", label: "Laptops", value: 700},
     ],
   },
   {
     id: "furniture",
     label: "Furniture",
     children: [
-      { id: "tables", label: "Tables", value: 300 },
-      { id: "chairs", label: "Chairs", value: 700 },
+      {id: "tables", label: "Tables", value: 300},
+      {id: "chairs", label: "Chairs", value: 700},
     ],
   },
 ];
@@ -45,10 +46,10 @@ const CostAllocationHierarchicalTable = () => {
 
   const handlePercentageChange = (id, percentage) => {
     if (!inputs[id] || isNaN(percentage)) {
-      setErrors((prev) => ({ ...prev, [id]: "Please Enter a Value" }));
+      setErrors((prev) => ({...prev, [id]: "Please Enter a Value"}));
       return;
     }
-    setErrors((prev) => ({ ...prev, [id]: "" }));
+    setErrors((prev) => ({...prev, [id]: ""}));
 
     const updatedData = data.map((parent) => {
       if (
@@ -59,7 +60,9 @@ const CostAllocationHierarchicalTable = () => {
           child.id === id
             ? {
                 ...child,
-                value: Math.round(child.value * (1 + percentage / 100)),
+                value: Number(
+                  (child.value * (1 + percentage / 100)).toFixed(2)
+                ),
               }
             : child
         );
@@ -76,10 +79,10 @@ const CostAllocationHierarchicalTable = () => {
 
   const handleValueChange = (id, newValue) => {
     if (!inputs[id] || isNaN(newValue)) {
-      setErrors((prev) => ({ ...prev, [id]: "Please Enter a Value" }));
+      setErrors((prev) => ({...prev, [id]: "Please Enter a Value"}));
       return;
     }
-    setErrors((prev) => ({ ...prev, [id]: "" }));
+    setErrors((prev) => ({...prev, [id]: ""}));
 
     const updatedData = data.map((parent) => {
       if (parent.id === id) {
@@ -87,13 +90,13 @@ const CostAllocationHierarchicalTable = () => {
         const factor = total !== 0 ? newValue / total : 1;
         const newChildren = parent.children.map((child) => ({
           ...child,
-          value: Math.round(child.value * factor),
+          value: (child.value * factor).toFixed(2),
         }));
-        return { ...parent, children: newChildren, value: newValue };
+        return {...parent, children: newChildren, value: newValue};
       }
       if (parent.children.some((child) => child.id === id)) {
         const newChildren = parent.children.map((child) =>
-          child.id === id ? { ...child, value: newValue } : child
+          child.id === id ? {...child, value: newValue} : child
         );
         return {
           ...parent,
@@ -113,6 +116,11 @@ const CostAllocationHierarchicalTable = () => {
     return `${variance.toFixed(2)}%`;
   };
 
+  const handleInputChange = (id, value) => {
+    setInputs((prev) => ({ ...prev, [id]: value }));
+    setErrors((prev) => ({ ...prev, [id]: "" }));
+  };
+
   return (
     <div className="table-container">
       <h2>Cost Allocation Dashboard</h2>
@@ -130,93 +138,28 @@ const CostAllocationHierarchicalTable = () => {
         <tbody>
           {data.map((parent) => (
             <React.Fragment key={parent.id}>
-              <tr className="parent-row">
-                <td>{parent.label}</td>
-                <td>{parent.value}</td>
-                <td>
-                  <input
-                    type="number"
-                    className="input"
-                    value={inputs[parent.id] || ""}
-                    placeHolder="enter a value"
-                    onChange={(e) => {
-                      setInputs({ ...inputs, [parent.id]: e.target.value });
-                      setErrors((prev) => ({ ...prev, [parent.id]: "" }));
-                    }}
-                  />
-                  {errors[parent.id] && (
-                    <span className="error">{errors[parent.id]}</span>
-                  )}
-                </td>
-                <td>
-                  <button
-                    className="button"
-                    onClick={() =>
-                      handlePercentageChange(
-                        parent.id,
-                        Number(inputs[parent.id])
-                      )
-                    }
-                  >
-                    Apply %
-                  </button>
-                </td>
-                <td>
-                  <button
-                    className="button"
-                    onClick={() =>
-                      handleValueChange(parent.id, Number(inputs[parent.id]))
-                    }
-                  >
-                    Set Value
-                  </button>
-                </td>
-                <td>{calculateVariance(parent.id, parent.value)}</td>
-              </tr>
+              <RowComponent
+                item={parent}
+                isChild={false}
+                inputs={inputs}
+                errors={errors}
+                handleInputChange={handleInputChange}
+                handlePercentageChange={handlePercentageChange}
+                handleValueChange={handleValueChange}
+                calculateVariance={calculateVariance}
+              />
               {parent.children.map((child) => (
-                <tr key={child.id} className="child-row">
-                  <td>- {child.label}</td>
-                  <td>{child.value}</td>
-                  <td>
-                    <input
-                      type="number"
-                      className="input"
-                      placeHolder="enter a value"
-                      value={inputs[child.id] || ""}
-                      onChange={(e) => {
-                        setInputs({ ...inputs, [child.id]: e.target.value });
-                        setErrors((prev) => ({ ...prev, [child.id]: "" })); // Clear error on change
-                      }}
-                    />
-                    {errors[child.id] && (
-                      <span className="error">{errors[child.id]}</span>
-                    )}
-                  </td>
-                  <td>
-                    <button
-                      className="button"
-                      onClick={() =>
-                        handlePercentageChange(
-                          child.id,
-                          Number(inputs[child.id])
-                        )
-                      }
-                    >
-                      Apply %
-                    </button>
-                  </td>
-                  <td>
-                    <button
-                      className="button"
-                      onClick={() =>
-                        handleValueChange(child.id, Number(inputs[child.id]))
-                      }
-                    >
-                      Set Value
-                    </button>
-                  </td>
-                  <td>{calculateVariance(child.id, child.value)}</td>
-                </tr>
+                <RowComponent
+                  key={child.id}
+                  item={child}
+                  isChild={true}
+                  inputs={inputs}
+                  errors={errors}
+                  handleInputChange={handleInputChange}
+                  handlePercentageChange={handlePercentageChange}
+                  handleValueChange={handleValueChange}
+                  calculateVariance={calculateVariance}
+                />
               ))}
             </React.Fragment>
           ))}
